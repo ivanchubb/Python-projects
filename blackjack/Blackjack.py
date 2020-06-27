@@ -49,6 +49,7 @@ class Player:
         self.split_bet = 0
         self.aces = 0
         self.split_aces = 0
+        self.ai = "no"
 
     def __repr__(self):
         return "{name}".format(name=self.name)
@@ -59,6 +60,7 @@ def place_bets(gamblers):
     for i in range(len(gamblers)):
         while True:
             print("{player}, How much do you want to bet?".format(player=gamblers[i]))
+            #spot for AI to place bets
             gamblers[i].bet = int(input())
 
             #ensure bet is positive and less than total funds
@@ -71,7 +73,7 @@ def place_bets(gamblers):
 
 #set table with number of players and dealer
 def get_players():
-    print("How many people are playing?")
+    print("The table has space for 5 players.  How many humans are playing?")
     while True:
         num_players = int(input())
         if num_players <6:
@@ -84,10 +86,36 @@ def get_players():
         print("Enter name for player" + str(i+1))
         temp = input()
         players.append(temp)
+
+    #This is where AI players need to be created
+    print("Would you like to play with any AI? you have space for " + str(5-num_players) + ".")
+    temp = input()
+    while(True):
+        if "y" in temp.lower():
+            #remove when AI is ready to be implemented
+            print("Sorry, this feature isn't ready yet, starting game with humans only")
+            break
+            print("Who would you like to play with (Booker, Ace, or Both)?")
+            choice = input()
+            if "booker" == choice.lower():
+                players.append("Booker")
+            elif "ace" == choice.lower():
+                players.append("Ace")
+            elif "both" == choice.lower():
+                players.append("Ace")
+                players.append("Booker")
+        else:
+            print("No AI then.")
+        break
     for i in range(len(players)):
         classyplayers.append(Player(players[i]))
         classyplayers[i].name = players[i]
         classyplayers[i].chair = i+1
+        #there is a better way to do this than by name, but i am not sure how i want to do it yet, probably
+        #putting the AIs in after the classes are established so they start out with the ai attribute
+        #leaving as it is will result in problems if a player chooses the names "booker" or "Ace"
+        if classyplayers[i].name == "Booker" or "Ace":
+            classyplayers[i].ai = "yes"
         print("{player} is sitting in chair {chair} and has ${cash}".format(player=classyplayers[i].name, chair=classyplayers[i].chair, cash=classyplayers[i].cash))
     #dealer
     dealer = Player("Dealer")
@@ -125,6 +153,7 @@ def play_hands(gamblers, dealer, deck):
     for i in range(len(gamblers)):
         while True:
             choice = input("{name}, you have {points} HIT or STAND? \n".format(name=gamblers[i].name, points=gamblers[i].points))
+            #spot for AI to make decisions
             if "h" in choice.lower():
                 gamblers[i] = deal_card(deck, gamblers[i])
                 gamblers[i] = check_ace(gamblers[i])
@@ -265,6 +294,8 @@ def play_again(gamblers):
     else:
         play_again()
 
+#building the AI
+
 
 #The actual game
 def blackjack():
@@ -290,7 +321,7 @@ def blackjack():
 blackjack()
 
 #issues to solve:
-#input validation to prevent errors
+#more input validation to prevent errors
 #splitting
 #robot that counts cards and makes decisions bets (ACE)
 #robot that plays by the book (Booker)

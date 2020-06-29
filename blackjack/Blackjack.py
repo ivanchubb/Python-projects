@@ -2,8 +2,9 @@
 import random
 import os
 
-
-#build the deck
+global card_count
+card_count= 0
+# build the deck
 def new_deck():
     deck = {}
     for i in range(4):
@@ -12,8 +13,8 @@ def new_deck():
         k = 0
         for j in range(13):
             if j < 9:
-                cardname = "{number} of {suit}".format(number=j+2, suit=suits[i])
-                deck[cardname] = j+2
+                cardname = "{number} of {suit}".format(number=j + 2, suit=suits[i])
+                deck[cardname] = j + 2
             elif 9 <= j <= 11:
                 cardname = "{number} of {suit}".format(number=facecards[k], suit=suits[i])
                 deck[cardname] = 10
@@ -22,20 +23,21 @@ def new_deck():
                 cardname = "{number} of {suit}".format(number=facecards[k], suit=suits[i])
                 deck[cardname] = 11
                 k += 1
-    #print(deck)
     return deck
 
 
-#shuffle the deck
+# shuffle the deck
 def shuffle_deck(deck):
     lst = list(deck.items())
     random.shuffle(lst)
     shuffled_deck = dict(lst)
     print("Shuffling the deck")
+    global card_count
+    card_count = 0
     return shuffled_deck
 
 
-#define player class
+# define player class
 class Player:
     def __init__(self, name):
         self.points = 0
@@ -55,15 +57,15 @@ class Player:
         return "{name}".format(name=self.name)
 
 
-#betting
+# betting
 def place_bets(gamblers):
     for i in range(len(gamblers)):
         while True:
             print("{player}, How much do you want to bet?".format(player=gamblers[i]))
-            #spot for AI to place bets
+            # spot for AI to place bets
             gamblers[i].bet = int(input())
 
-            #ensure bet is positive and less than total funds
+            # ensure bet is positive and less than total funds
             if gamblers[i].cash >= gamblers[i].bet > 0 and gamblers[i].bet % 5 == 0:
                 gamblers[i].cash -= gamblers[i].bet
                 break
@@ -71,29 +73,29 @@ def place_bets(gamblers):
                 print("Invalid bet, must be a positive number and multiple of 5. try again")
 
 
-#set table with number of players and dealer
+# set table with number of players and dealer
 def get_players():
     print("The table has space for 5 players.  How many humans are playing?")
     while True:
         num_players = int(input())
-        if num_players <6:
+        if num_players < 6:
             break
         else:
             print("There is only space for 5 people at the table")
     players = []
     classyplayers = []
     for i in range(int(num_players)):
-        print("Enter name for player" + str(i+1))
+        print("Enter name for player" + str(i + 1))
         temp = input()
         players.append(temp)
 
-    #This is where AI players need to be created
-    print("Would you like to play with any AI? you have space for " + str(5-num_players) + ".")
+    # This is where AI players need to be created
+    print("Would you like to play with any AI? you have space for " + str(5 - num_players) + ".")
     temp = input()
-    while(True):
+    while True:
         if "y" in temp.lower():
-            #remove when AI is ready to be implemented
-            print("Sorry, this feature isn't ready yet, starting game with humans only")
+            # remove when AI is ready to be implemented
+            print("This feature is not yet ready")
             break
             print("Who would you like to play with (Booker, Ace, or Both)?")
             choice = input()
@@ -110,22 +112,25 @@ def get_players():
     for i in range(len(players)):
         classyplayers.append(Player(players[i]))
         classyplayers[i].name = players[i]
-        classyplayers[i].chair = i+1
-        #there is a better way to do this than by name, but i am not sure how i want to do it yet, probably
-        #putting the AIs in after the classes are established so they start out with the ai attribute
-        #leaving as it is will result in problems if a player chooses the names "booker" or "Ace"
-        if classyplayers[i].name == "Booker" or "Ace":
+        classyplayers[i].chair = i + 1
+        # there is a better way to do this than by name, but i am not sure how i want to do it yet, probably
+        # putting the AIs in after the classes are established so they start out with the ai attribute
+        # leaving as it is will result in problems if a player chooses the names "booker" or "Ace"
+        if classyplayers[i].name == "Booker" or classyplayers[i].name == "Ace":
             classyplayers[i].ai = "yes"
-        print("{player} is sitting in chair {chair} and has ${cash}".format(player=classyplayers[i].name, chair=classyplayers[i].chair, cash=classyplayers[i].cash))
-    #dealer
+        print("{player} is sitting in chair {chair} and has ${cash}".format(player=classyplayers[i].name,
+                                                                            chair=classyplayers[i].chair,
+                                                                            cash=classyplayers[i].cash))
+    # dealer
     dealer = Player("Dealer")
     dealer.chair = len(classyplayers)
     return classyplayers, dealer
 
 
-#deal a single card, returns the card dealt and it's point value, removes the last item in the dictionary
+# deal a single card, returns the card dealt and it's point value, removes the last item in the dictionary
 def deal_card(deck, player):
     card, points = deck.popitem()
+    get_count(points)
     player.hand.append(card)
     if "Ace" in card:
         player.aces += 1
@@ -134,45 +139,154 @@ def deal_card(deck, player):
     return player
 
 
-#deal all the cards
+# deal all the cards
 def two_cards_each(players, dealer, deck):
     for j in range(len(players)):
         for i in range(2):
             players[j] = deal_card(deck, players[j])
-        print("{player} has {cards} with a value of {points}".format(player=players[j].name, cards=players[j].hand, points=players[j].points))
+        print("{player} has {cards} with a value of {points}".format(player=players[j].name, cards=players[j].hand,
+                                                                     points=players[j].points))
 
-#dealer needs his cards too
+    # dealer needs his cards too
     for i in range(2):
         dealer = deal_card(deck, dealer)
     print("{dealer} shows {card}".format(dealer=dealer.name, card=dealer.hand[0]))
     return players, dealer, deck
 
 
-#allow user to hit/stand
+def get_count(value):
+    global card_count
+    if 2 <= value <= 6:
+        card_count += 1
+    if 10 <= value <= 11:
+        card_count -= 1
+    pass
+
+
+# allow ai to hit/stand
+def ai_play_hands(gamblers, dealer, deck, player_num):
+    print("{name}, you have {points} HIT or STAND".format(name=gamblers[player_num].name, points=gamblers[player_num].points))
+    print("The Card count is {count}".format(count=card_count))
+    # decision matrix based on hi-lo
+    # player new card isn't considered in the count?
+    # would be better to put the running count in the deal_card function and have it ignore the dealer's second card
+    while True:
+        if gamblers[player_num].points == 12:
+            if "2" in dealer.hand[0] and card_count < 3:
+                print("{name} hits!".format(name=gamblers[player_num].name))
+                gamblers[player_num] = deal_card(deck, gamblers[player_num])
+                gamblers[player_num] = check_ace(gamblers[player_num])
+            elif "3" in dealer.hand[0] and card_count < 1:
+                print("{name} hits!".format(name=gamblers[player_num].name))
+                gamblers[player_num] = deal_card(deck, gamblers[player_num])
+                gamblers[player_num] = check_ace(gamblers[player_num])
+            elif "4" in dealer.hand[0] and card_count < 0:
+                print("{name} hits!".format(name=gamblers[player_num].name))
+                gamblers[player_num] = deal_card(deck, gamblers[player_num])
+                gamblers[player_num] = check_ace(gamblers[player_num])
+            elif "5" in dealer.hand[0] and card_count < -1:
+                print("{name} hits!".format(name=gamblers[player_num].name))
+                gamblers[player_num] = deal_card(deck, gamblers[player_num])
+                gamblers[player_num] = check_ace(gamblers[player_num])
+            else:
+                print("{name} hits!".format(name=gamblers[player_num].name))
+                gamblers[player_num] = deal_card(deck, gamblers[player_num])
+                gamblers[player_num] = check_ace(gamblers[player_num])
+        elif gamblers[player_num].points == 13:
+            if "2" in dealer.hand[0]:
+                print("{name} hits!".format(name=gamblers[player_num].name))
+                gamblers[player_num] = deal_card(deck, gamblers[player_num])
+                gamblers[player_num] = check_ace(gamblers[player_num])
+        elif gamblers[player_num].points == 14:
+            if "Ace" in dealer.hand[0] and card_count < 9:
+                print("{name} hits!".format(name=gamblers[player_num].name))
+                gamblers[player_num] = deal_card(deck, gamblers[player_num])
+                gamblers[player_num] = check_ace(gamblers[player_num])
+        elif gamblers[player_num].points == 15:
+            if "7" in dealer.hand[0] and card_count < 10:
+                print("{name} hits!".format(name=gamblers[player_num].name))
+                gamblers[player_num] = deal_card(deck, gamblers[player_num])
+                gamblers[player_num] = check_ace(gamblers[player_num])
+            elif "8" in dealer.hand[0] and card_count < 10:
+                print("{name} hits!".format(name=gamblers[player_num].name))
+                gamblers[player_num] = deal_card(deck, gamblers[player_num])
+                gamblers[player_num] = check_ace(gamblers[player_num])
+            elif "9" in dealer.hand[0] and card_count < 8:
+                print("{name} hits!".format(name=gamblers[player_num].name))
+                gamblers[player_num] = deal_card(deck, gamblers[player_num])
+                gamblers[player_num] = check_ace(gamblers[player_num])
+            elif "10" in dealer.hand[0] or "Jack" in dealer.hand[0] or "Queen" in dealer.hand[0] or "King" in dealer.hand:
+                if card_count < 4:
+                    print("{name} hits!".format(name=gamblers[player_num].name))
+                    gamblers[player_num] = deal_card(deck, gamblers[player_num])
+                    gamblers[player_num] = check_ace(gamblers[player_num])
+            elif "Ace" in dealer.hand[0] and card_count < 9:
+                print("{name} hits!".format(name=gamblers[player_num].name))
+                gamblers[player_num] = deal_card(deck, gamblers[player_num])
+                gamblers[player_num] = check_ace(gamblers[player_num])
+        elif gamblers[player_num].points == 16:
+            if "7" in dealer.hand[0] and card_count < 9:
+                print("{name} hits!".format(name=gamblers[player_num].name))
+                gamblers[player_num] = deal_card(deck, gamblers[player_num])
+                gamblers[player_num] = check_ace(gamblers[player_num])
+            elif "8" in dealer.hand[0] and card_count < 7:
+                print("{name} hits!".format(name=gamblers[player_num].name))
+                gamblers[player_num] = deal_card(deck, gamblers[player_num])
+                gamblers[player_num] = check_ace(gamblers[player_num])
+            elif "9" in dealer.hand[0] and card_count < 5:
+                print("{name} hits!".format(name=gamblers[player_num].name))
+                gamblers[player_num] = deal_card(deck, gamblers[player_num])
+                gamblers[player_num] = check_ace(gamblers[player_num])
+            elif "10" in dealer.hand[0] or "Jack" in dealer.hand[0] or "Queen" in dealer.hand[0] or "King" in dealer.hand:
+                if card_count < 0:
+                    print("{name} hits!".format(name=gamblers[player_num].name))
+                    gamblers[player_num] = deal_card(deck, gamblers[player_num])
+                    gamblers[player_num] = check_ace(gamblers[player_num])
+            elif "Ace" in dealer.hand[0] and card_count < 8:
+                print("{name} hits!".format(name=gamblers[player_num].name))
+                gamblers[player_num] = deal_card(deck, gamblers[player_num])
+                gamblers[player_num] = check_ace(gamblers[player_num])
+        elif gamblers[player_num].points < 12:
+            pass
+        elif gamblers[player_num].points > 16:
+            break
+        break
+    # return card_count, deck, gamblers
+    pass
+
+
+# allow user to hit/stand
 def play_hands(gamblers, dealer, deck):
     for i in range(len(gamblers)):
         while True:
-            choice = input("{name}, you have {points} HIT or STAND? \n".format(name=gamblers[i].name, points=gamblers[i].points))
-            #spot for AI to make decisions
-            if "h" in choice.lower():
-                gamblers[i] = deal_card(deck, gamblers[i])
-                gamblers[i] = check_ace(gamblers[i])
-                print("{card}, you have {points}".format(card=gamblers[i].hand[-1], name=gamblers[i].name, points=gamblers[i].points))
-                if gamblers[i].points > 21:
-                    print("BUST!")
+            if gamblers[i].ai == "no":
+                choice = input("{name}, you have {points} HIT or STAND? \n".format(name=gamblers[i].name,
+                                                                                   points=gamblers[i].points))
+                if "h" in choice.lower():
+                    gamblers[i] = deal_card(deck, gamblers[i])
+                    gamblers[i] = check_ace(gamblers[i])
+                    print("{card}, you have {points}".format(card=gamblers[i].hand[-1], name=gamblers[i].name,
+                                                             points=gamblers[i].points))
+                    if gamblers[i].points > 21:
+                        print("BUST!")
+                        break
+                    elif gamblers[i].points == 21:
+                        print("Blackjack!")
+                        break
+                elif "s" in choice.lower():
                     break
-                elif gamblers[i].points == 21:
-                    print("Blackjack!")
-                    break
-            elif "s" in choice.lower():
+            elif gamblers[i].ai == "yes":
+                ai_play_hands(gamblers, dealer, deck, i)
                 break
-    #compare scores to dealer
+
+    # compare scores to dealer
     print("Dealer shows {hand}. Dealer has {points}".format(hand=dealer.hand, points=dealer.points))
     while True:
         if dealer.points < 17:
             dealer = deal_card(deck, dealer)
             dealer = check_ace(dealer)
-            print("Dealer takes a card, it's a {card}, Dealer has {points}".format(card=dealer.hand[-1], points=dealer.points))
+            print("Dealer takes a card, it's a {card}, Dealer has {points}".format(card=dealer.hand[-1],
+                                                                                   points=dealer.points))
             if dealer.points > 21:
                 print("DEALER BUSTS!")
                 break
@@ -185,25 +299,29 @@ def play_hands(gamblers, dealer, deck):
     return gamblers, dealer
 
 
-#payout
+# payout
 def payout(gamblers, dealer):
     for i in range(len(gamblers)):
         if dealer.points > 21:
             if gamblers[i].points <= 21:
-                gamblers[i].cash += 2*gamblers[i].bet
-                print("{player} won ${bet}. New total ${cash}".format(player=gamblers[i].name, bet=gamblers[i].bet, cash=gamblers[i].cash))
+                gamblers[i].cash += 2 * gamblers[i].bet
+                print("{player} won ${bet}. New total ${cash}".format(player=gamblers[i].name, bet=gamblers[i].bet,
+                                                                      cash=gamblers[i].cash))
             elif gamblers[i].points > 21:
-                print("{player} lost ${bet}. New total ${cash}".format(player=gamblers[i].name, cash=gamblers[i].cash, bet=gamblers[i].bet))
+                print("{player} lost ${bet}. New total ${cash}".format(player=gamblers[i].name, cash=gamblers[i].cash,
+                                                                       bet=gamblers[i].bet))
         elif dealer.points < gamblers[i].points <= 21:
-            gamblers[i].cash += 2*gamblers[i].bet
-            print("{player} won ${bet}. New total ${cash}".format(player=gamblers[i].name, bet=gamblers[i].bet, cash=gamblers[i].cash))
+            gamblers[i].cash += 2 * gamblers[i].bet
+            print("{player} won ${bet}. New total ${cash}".format(player=gamblers[i].name, bet=gamblers[i].bet,
+                                                                  cash=gamblers[i].cash))
         elif dealer.points == gamblers[i].points:
             gamblers[i].cash += gamblers[i].bet
             print("{player} ties dealer, cash still ${cash}".format(player=gamblers[i].name, cash=gamblers[i].cash))
         elif gamblers[i].points < dealer.points <= 21:
             print("{player} loses to dealer, New total ${cash}".format(player=gamblers[i].name, cash=gamblers[i].cash))
         elif gamblers[i].points > 21:
-            print("{player} lost ${bet}. New total ${cash}".format(player=gamblers[i].name, cash=gamblers[i].cash, bet=gamblers[i].bet))
+            print("{player} lost ${bet}. New total ${cash}".format(player=gamblers[i].name, cash=gamblers[i].cash,
+                                                                   bet=gamblers[i].bet))
     return gamblers
 
 
@@ -218,7 +336,7 @@ def reset_hands(gamblers, dealer):
     return gamblers, dealer
 
 
-#check for Ace
+# check for Ace
 def check_ace(gambler):
     if gambler.points > 21 and gambler.aces > 0:
         gambler.points -= 10
@@ -256,8 +374,10 @@ def new_game():
                 player.cash = int(save_file.readline())
                 player.chair = int(save_file.readline())
                 classyplayers.append(player)
-                print("{player} is sitting in chair {chair} and has ${cash}".format(player=classyplayers[j].name, chair=classyplayers[j].chair, cash=classyplayers[j].cash))
-            #dealer
+                print("{player} is sitting in chair {chair} and has ${cash}".format(player=classyplayers[j].name,
+                                                                                    chair=classyplayers[j].chair,
+                                                                                    cash=classyplayers[j].cash))
+            # dealer
             dealer = Player("Dealer")
             dealer.chair = len(classyplayers)
             save_file.close
@@ -267,7 +387,7 @@ def new_game():
         return gamblers, dealer
 
 
-#kicks people out if they run out of money and gives Game Over if no one is left
+# kicks people out if they run out of money and gives Game Over if no one is left
 def play_again(gamblers):
     losers = []
     for i in range(len(gamblers)):
@@ -292,12 +412,13 @@ def play_again(gamblers):
             print("Goodbye!")
             return False
     else:
-        play_again()
-
-#building the AI
+        play_again(gamblers)
 
 
-#The actual game
+# building the AI
+
+
+# The actual game
 def blackjack():
     playable_hands = 0
     gamblers, dealer = new_game()
@@ -320,8 +441,8 @@ def blackjack():
 
 blackjack()
 
-#issues to solve:
-#more input validation to prevent errors
-#splitting
-#robot that counts cards and makes decisions bets (ACE)
-#robot that plays by the book (Booker)
+# issues to solve:
+# more input validation to prevent errors
+# splitting
+# robot that counts cards and makes decisions bets (ACE)
+# robot that plays by the book (Booker)
